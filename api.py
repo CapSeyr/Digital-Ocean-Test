@@ -34,12 +34,14 @@ urls_schema = UrlSchema(many = True)
 short_code_schema = ShortCodeSchema()
 short_codes_schema = ShortCodeSchema(many=True)
 
+
 class Url(db.Model):
     __tablename__ = "urls"
 
     id = db.Column(db.Integer, primary_key=True)
     original_url = db.Column(db.Text, nullable=False)
 
+    #only load if wanted
     short_codes = db.relationship(
         "ShortCode",
         backref="url",
@@ -79,10 +81,12 @@ class ShortCode(db.Model):
 
 
 class UrlsResource(Resource):
+    #return all current Urls in the db
     def get(self):
         urls = Url.query.all() 
         return urls_schema.dump(urls), 200
     
+    #add new Url, return shortcode and metadata if possible.
     def post(self):
         json_data = request.get_json()
 
@@ -132,6 +136,7 @@ class UrlsResource(Resource):
         }, 201
 
 class ShortCodeResource(Resource):
+    #delete a given shortcode, or parent if this is the only shortcode allocated to it.
     def delete(self, code):
         short_code = ShortCode.query.filter_by(code=code).first()
 
@@ -150,6 +155,7 @@ class ShortCodeResource(Resource):
 
         return {"message": "Short code deleted successfully"}, 200
     
+    #get metadata associated with shortcode
     def get(self, code):
         short_code = ShortCode.query.filter_by(code=code).first_or_404(
             description="Short code not found"
@@ -159,21 +165,27 @@ class ShortCodeResource(Resource):
 
 
 BASE62 = string.ascii_letters + string.digits
-
+#create random short code
 def generate_random_code(length=6):
     return ''.join(random.choices(BASE62, k=length))
 
-
+#if shortcode already exists try again.
+#note, only works small scale. larger scale i would 
+#check for integrity errors and then retry.
 def generate_unique_code(length=6):
     while True:
         code = generate_random_code(length)
         if not ShortCode.query.filter_by(code=code).first():
             return code
         
-    
+
+#url for posting and getting all urls
 api.add_resource(UrlsResource, '/urls')
+
+#url for getting shortcode metadata, and deleting short codes
 api.add_resource(ShortCodeResource, "/short/<string:code>")
 
+#redirecting url
 @app.route("/<string:code>")
 def redirect_short_url(code):
     short_code = ShortCode.query.filter_by(code=code).first_or_404()
@@ -183,6 +195,7 @@ def redirect_short_url(code):
 
     return redirect(short_code.url.original_url)
 
+#landing page, doesnt do much but show that the api is running. 
 @app.route("/")
 def landing_page():
     return """
