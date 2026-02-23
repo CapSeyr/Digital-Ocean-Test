@@ -1,4 +1,5 @@
 **URL Shortener Service**
+
 _Overview_
 
 This is a RESTful URL shortener service built with Flask and SQLAlchemy.
@@ -24,6 +25,7 @@ Marshmallow
 SQLite (default)
 
 **Data Model**
+
 _Url_
 
 Represents the canonical long URL.
@@ -49,6 +51,7 @@ url_id	        ForeignKey → Url
 
 
 **API Endpoints**
+
 _Create Short URL_
 
 POST /urls
