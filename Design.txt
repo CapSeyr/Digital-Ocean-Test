@@ -1,0 +1,59 @@
+API Design Document
+Architectural Overview
+
+This service follows a RESTful architecture built on Flask.
+
+The system separates:
+
+Canonical URLs (Url)
+
+Shortened aliases (ShortCode)
+
+This enables multiple short codes per original URL while preserving normalization.
+
+Resource Design
+Url Resource
+
+Represents the original long URL.
+
+Created via POST /urls
+
+Retrieved via GET /urls
+
+
+ShortCode Resource
+
+Represents an alias to a Url.
+
+Retrieved via GET /short/<code>
+
+Deleted via DELETE /short/<code>
+
+Redirect behavior is implemented via a direct Flask route:
+GET /<code>
+
+Short Code Generation Strategy
+
+Uses Base62 character set (a-z, A-Z, 0-9)
+Random generation
+Application-level uniqueness check
+Database-level unique constraint for enforcement
+
+This approach supports:
+
+Automatic code generation
+User-defined aliases
+Multiple short codes per URL
+Data Integrity
+Unique constraint on ShortCode.code
+Foreign key relationship between ShortCode and Url
+Cascade delete ensures referential integrity
+
+
+Scalability Considerations
+
+For high-traffic environments:
+
+Click tracking could be moved to Redis or event logging
+Short code lookup is indexed for efficient resolution
+Database writes during redirect may require batching
